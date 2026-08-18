@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <unistd.h>
 
 using Target = void (*)();
 
@@ -12,9 +13,10 @@ void legitimate_target()
 }
 
 __attribute__((noinline))
-void benign_target()
+int benign_target()
 {
     std::puts("[!] CONTROL FLOW HIJACKED: benign_target()");
+    return 0;
 }
 
 struct Object {
@@ -50,7 +52,9 @@ void vulnerable()
      *
      * This can overwrite obj.callback.
      */
-    std::gets(obj.buffer);
+    ssize_t n = read(STDIN_FILENO, obj.buffer, 128);
+
+    (void)n;
 
     std::printf("[normal] callback after overflow = %p\n",
                 reinterpret_cast<void*>(obj.callback));
